@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/Vortex-ECO/Vortex-SDk-GO/msg"
 	futures "github.com/jjj124/go-future"
+	"github.com/jjj124/go-vortex-client/msg"
 )
 
 type CreateDeviceReply struct {

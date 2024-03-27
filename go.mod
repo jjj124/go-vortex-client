@@ -1,4 +1,4 @@
-module github.com/Vortex-ECO/Vortex-SDk-GO
+module github.com/jjj124/go-vortex-client
 
 go 1.22
 

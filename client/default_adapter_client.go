@@ -2,10 +2,10 @@ package client
 
 import (
 	"bytes"
-	"github.com/Vortex-ECO/Vortex-SDk-GO/msg"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	futures "github.com/jjj124/go-future"
 	"github.com/jjj124/go-metrics"
+	"github.com/jjj124/go-vortex-client/msg"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"log"

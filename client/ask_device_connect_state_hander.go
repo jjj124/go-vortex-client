@@ -1,6 +1,6 @@
 package client
 
-import "github.com/Vortex-ECO/Vortex-SDk-GO/msg"
+import "github.com/jjj124/go-vortex-client/msg"
 
 func NewAskDeviceConnectStateHandler() ReceivedMsgHandler {
 	return func(msg *msg.ReceivedMsg, client AdapterClient) {

@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/Vortex-ECO/Vortex-SDk-GO/msg"
+	"github.com/jjj124/go-vortex-client/msg"
 )
 
 func NewServiceInvokeMsgHandler() ReceivedMsgHandler {

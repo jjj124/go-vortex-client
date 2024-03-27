@@ -2,8 +2,8 @@ package msg
 
 import (
 	"encoding/json"
-	"github.com/Vortex-ECO/Vortex-SDk-GO/utils"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/jjj124/go-vortex-client/utils"
 	"time"
 )
 
