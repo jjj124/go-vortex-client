@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"log"
 	"net"
 	"testing"
 	"time"
@@ -53,5 +54,15 @@ func TestPropReportSub(t *testing.T) {
 	} else {
 		fmt.Println(reply)
 	}
+}
 
+func TestAskThingModel(t *testing.T) {
+	var adapter = NewClientAndStart()
+	var reply, err = adapter.AdapterOperation().AskThingModelOperation().Execute().BlockingGet()
+	if err == nil {
+		var props = reply.GetProps()
+		for _, val := range props {
+			log.Println(val.ToString())
+		}
+	}
 }

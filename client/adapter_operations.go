@@ -4,10 +4,15 @@ type AdapterOperations interface {
 	CreateDeviceOperation() CreateDeviceOperation
 	AskPidByNickOperation() AskPidByNickOperation
 	AskConfigOperation() AskConfigOperation
+	AskThingModelOperation() AskThingModelOperation
 }
 
 type adapterOperations struct {
 	adapter AdapterClient
+}
+
+func (d *adapterOperations) AskThingModelOperation() AskThingModelOperation {
+	return NewAskThingModelOperation(d.adapter)
 }
 
 func (d *adapterOperations) AskConfigOperation() AskConfigOperation {
