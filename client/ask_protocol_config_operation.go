@@ -26,17 +26,17 @@ func (a *AskConfigReply) GetFormat() string {
 	}
 }
 
-type AskConfigOperation interface {
+type AskProtocolConfigOperation interface {
 	Execute() futures.Future[AskConfigReply]
 }
 
-type askConfigOperation struct {
+type askProtocolConfigOperation struct {
 	adapterClient AdapterClient
 }
 
-func (a *askConfigOperation) Execute() futures.Future[AskConfigReply] {
+func (a *askProtocolConfigOperation) Execute() futures.Future[AskConfigReply] {
 	var baseMsg = msg.NewBaseMsg()
-	baseMsg.WithMethod("vortex.adapter.ask-config")
+	baseMsg.WithMethod("vortex.adapter.ask-protocol-config")
 	var deliveryMsg = msg.NewDeliveryMsg(baseMsg)
 	var f = a.adapterClient.Delivery(deliveryMsg)
 	return futures.Then(f, func(m *msg.ReceivedMsg) *AskConfigReply {
@@ -45,8 +45,8 @@ func (a *askConfigOperation) Execute() futures.Future[AskConfigReply] {
 		}
 	})
 }
-func NewAskConfigOperation(adapter AdapterClient) AskConfigOperation {
-	return &askConfigOperation{
+func NewAskConfigOperation(adapter AdapterClient) AskProtocolConfigOperation {
+	return &askProtocolConfigOperation{
 		adapterClient: adapter,
 	}
 }

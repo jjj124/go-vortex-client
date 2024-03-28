@@ -3,7 +3,7 @@ package client
 type AdapterOperations interface {
 	CreateDeviceOperation() CreateDeviceOperation
 	AskPidByNickOperation() AskPidByNickOperation
-	AskConfigOperation() AskConfigOperation
+	AskConfigOperation() AskProtocolConfigOperation
 	AskThingModelOperation() AskThingModelOperation
 }
 
@@ -15,7 +15,7 @@ func (d *adapterOperations) AskThingModelOperation() AskThingModelOperation {
 	return NewAskThingModelOperation(d.adapter)
 }
 
-func (d *adapterOperations) AskConfigOperation() AskConfigOperation {
+func (d *adapterOperations) AskConfigOperation() AskProtocolConfigOperation {
 	return NewAskConfigOperation(d.adapter)
 }
 
