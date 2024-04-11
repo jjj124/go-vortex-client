@@ -67,12 +67,14 @@ func (d *defaultAdapterClient) Delivery(m *msg.DeliveryMsg) futures.Future[msg.R
 	if err != nil {
 
 	} else {
-		log.Println("send --> ", mm.ToString())
 		go func() {
 			var token = mqttClient.Publish("up/"+d.Pid(), 1, false, bytes)
 			if token.Wait() {
-				metrics.GetOrRegisterCounter("adapter.msg.send", d.component.MetricsRegistry()).Inc(1)
-				d.component.RecentSendMsg().Push(m)
+				if token.Error() == nil {
+					log.Println("send --> ", mm.ToString())
+					metrics.GetOrRegisterCounter("adapter.msg.send", d.component.MetricsRegistry()).Inc(1)
+					d.component.RecentSendMsg().Push(m)
+				}
 			} else {
 				ret.CompleteExceptionally(errors.New("send msg fail!"))
 			}
@@ -151,7 +153,7 @@ func (d *defaultAdapterClient) connect(i int, waitGroup *sync.WaitGroup) {
 		time.Sleep(3 * time.Second)
 		go d.connect(i, waitGroup)
 	} else {
-		log.Printf("connect adapter gateway success [con_id=%d]!", i)
+		log.Printf("connect adapter gateway success [con_id=%d,client_id=%s ]!", i, d.ClientId())
 		token = client.Subscribe("down/"+d.Pid(), 1, newMsgHandler(d))
 		token.Wait()
 		d.mqttClients[i] = client

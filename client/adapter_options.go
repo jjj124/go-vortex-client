@@ -5,6 +5,7 @@ import (
 	url2 "net/url"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // tcp://127.0.0.1:11001?clientId=xxx&secret=xxx&connectNum=3
@@ -18,22 +19,26 @@ type AdapterOptions interface {
 }
 
 type adapterOptions struct {
-	pid        string
-	clientId   string
-	ip         net.IP
-	port       int
-	secret     string
-	connectNum int
+	pid         string
+	clientId    string
+	ip          net.IP
+	port        int
+	secret      string
+	connectNum  int
+	containerId string
+	clientIdEnv string
 }
 
 func NewAdapterOptions(pid string, clientId string, ip net.IP, port int, secret string, connectNum int) AdapterOptions {
 	return &adapterOptions{
-		pid:        pid,
-		clientId:   clientId,
-		ip:         ip,
-		port:       port,
-		secret:     secret,
-		connectNum: connectNum,
+		pid:         pid,
+		clientId:    clientId,
+		ip:          ip,
+		port:        port,
+		secret:      secret,
+		connectNum:  connectNum,
+		containerId: tryParseContainerId(),
+		clientIdEnv: tryParseClientIdEnv(),
 	}
 }
 func NewAdapterOptionsByUri(url string) AdapterOptions {
@@ -112,9 +117,34 @@ func (a *adapterOptions) Pid() string {
 }
 
 func (a *adapterOptions) ClientId() string {
+	if a.clientIdEnv != "" {
+		return a.clientIdEnv
+	}
+	if a.containerId != "" {
+		return a.containerId
+	}
+	return a.clientId
+}
+
+func tryParseContainerId() string {
+	data, err := os.ReadFile("/proc/self/cgroup")
+	if err != nil {
+		return ""
+	}
+	lines := strings.Split(string(data), "\n")
+	for _, line := range lines {
+		parts := strings.Split(line, "/")
+		if len(parts) >= 3 && parts[1] == "docker" {
+			return parts[2]
+		}
+	}
+	return ""
+}
+
+func tryParseClientIdEnv() string {
 	var v, b = os.LookupEnv("VORTEX_ADAPTER_CLIENT_ID")
 	if b {
 		return v
 	}
-	return a.clientId
+	return ""
 }

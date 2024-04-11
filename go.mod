@@ -11,6 +11,9 @@ require github.com/jjj124/go-metrics v0.0.1
 //require github.com/go-yaml/yaml/v3 v3.0.1
 
 require github.com/spf13/viper v1.18.2
+require (
+	github.com/hanwen/go-fuse/v2 v2.5.1
+)
 
 require (
 	github.com/jjj124/go-future v0.0.2
