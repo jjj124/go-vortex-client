@@ -1,6 +1,9 @@
 package client
 
-import "github.com/jjj124/go-vortex-client/msg"
+import (
+	"github.com/gookit/goutil/arrutil"
+	"github.com/jjj124/go-vortex-client/msg"
+)
 
 func NewAskRecentMsgHandler() ReceivedMsgHandler {
 	return func(msg *msg.ReceivedMsg, client AdapterClient) {
@@ -22,6 +25,7 @@ func handleAskRecentMsg(msg *msg.ReceivedMsg, client AdapterClient) {
 		recentMsg = client.Components().RecentReceivedMsg()
 	}
 	var snapshot = recentMsg.Snapshot()
+	arrutil.Reverse(snapshot)
 	var list = make([]any, len(snapshot))
 	for index, item := range snapshot {
 		list[index] = item.ToMap()
