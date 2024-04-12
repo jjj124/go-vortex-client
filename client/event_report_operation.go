@@ -13,6 +13,7 @@ type EventReportReply struct {
 type EventReportOperation interface {
 	NeedReply() EventReportOperation
 	WithValue(key string, val any) EventReportOperation
+	WithTs(ts int64) EventReportOperation
 	Execute() futures.Future[EventReportReply]
 }
 
@@ -21,6 +22,12 @@ type defaultEventReportOperation struct {
 	device    futures.Future[Device]
 	v         map[string]any
 	needReply bool
+	ts        int64
+}
+
+func (d *defaultEventReportOperation) WithTs(ts int64) EventReportOperation {
+	d.ts = ts
+	return d
 }
 
 func NewEventReportOperation(adapter AdapterClient, device futures.Future[Device]) EventReportOperation {
@@ -29,6 +36,7 @@ func NewEventReportOperation(adapter AdapterClient, device futures.Future[Device
 		device,
 		make(map[string]any, 0),
 		false,
+		-1,
 	}
 }
 
@@ -49,7 +57,10 @@ func (d *defaultEventReportOperation) Execute() futures.Future[EventReportReply]
 			ret.CompleteExceptionally(err)
 			return
 		}
-		var baseMsg = msg.NewBaseMsg().WithMethod("device.event.report")
+		var baseMsg = msg.NewBaseMsg().WithMethod(DeviceEventReport)
+		if d.ts > -1 {
+			baseMsg.WithTs(d.ts)
+		}
 		var payload = baseMsg.Payload()
 		maps.Copy(payload, d.v)
 		if d.needReply {

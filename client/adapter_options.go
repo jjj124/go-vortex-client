@@ -16,6 +16,7 @@ type AdapterOptions interface {
 	Port() int
 	Secret() string
 	ConnectNum() int
+	DebugLevel() int
 }
 
 type adapterOptions struct {
@@ -27,9 +28,14 @@ type adapterOptions struct {
 	connectNum  int
 	containerId string
 	clientIdEnv string
+	debugLevel  int
 }
 
-func NewAdapterOptions(pid string, clientId string, ip net.IP, port int, secret string, connectNum int) AdapterOptions {
+func (a *adapterOptions) DebugLevel() int {
+	return a.debugLevel
+}
+
+func NewAdapterOptions(pid string, clientId string, ip net.IP, port int, secret string, connectNum int, debugLevel int) AdapterOptions {
 	return &adapterOptions{
 		pid:         pid,
 		clientId:    clientId,
@@ -39,6 +45,7 @@ func NewAdapterOptions(pid string, clientId string, ip net.IP, port int, secret 
 		connectNum:  connectNum,
 		containerId: tryParseContainerId(),
 		clientIdEnv: tryParseClientIdEnv(),
+		debugLevel:  debugLevel,
 	}
 }
 func NewAdapterOptionsByUri(url string) AdapterOptions {

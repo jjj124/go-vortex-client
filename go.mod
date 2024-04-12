@@ -11,9 +11,8 @@ require github.com/jjj124/go-metrics v0.0.1
 //require github.com/go-yaml/yaml/v3 v3.0.1
 
 require github.com/spf13/viper v1.18.2
-require (
-	github.com/hanwen/go-fuse/v2 v2.5.1
-)
+
+require github.com/hanwen/go-fuse/v2 v2.5.1
 
 require (
 	github.com/jjj124/go-future v0.0.2
@@ -22,6 +21,7 @@ require (
 
 require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect

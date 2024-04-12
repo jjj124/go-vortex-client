@@ -16,6 +16,7 @@ type Msg interface {
 	Error() map[string]any
 	Marshal() ([]byte, error)
 	ToString() string
+	ToMap() map[string]any
 }
 
 type MqttClientBound interface {
@@ -36,14 +37,14 @@ func (b *BaseMsg) Error() map[string]any {
 }
 
 func (b *BaseMsg) ToString() string {
-	var bytes, err = json.Marshal(b.toMap())
+	var bytes, err = json.Marshal(b.ToMap())
 	if err != nil {
 		panic(err)
 	}
 	var str = string(bytes)
 	return str
 }
-func (b *BaseMsg) toMap() map[string]any {
+func (b *BaseMsg) ToMap() map[string]any {
 	var j = make(map[string]any, 5)
 	j["ts"] = b.ts
 	j["method"] = b.method
@@ -55,7 +56,7 @@ func (b *BaseMsg) toMap() map[string]any {
 }
 
 func (b *BaseMsg) Marshal() ([]byte, error) {
-	var j = b.toMap()
+	var j = b.ToMap()
 	return json.Marshal(j)
 }
 
@@ -81,6 +82,10 @@ func (b *BaseMsg) Header() map[string]any {
 
 func (b *BaseMsg) WithMethod(method string) *BaseMsg {
 	b.method = method
+	return b
+}
+func (b *BaseMsg) WithTs(ts int64) *BaseMsg {
+	b.ts = ts
 	return b
 }
 

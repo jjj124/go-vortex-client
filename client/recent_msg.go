@@ -2,12 +2,16 @@ package client
 
 import (
 	"container/list"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/jjj124/go-vortex-client/msg"
 	"sync"
 )
 
+var acceptMethod = mapset.NewSet[string](DevicePropReport, DeviceEventReport)
+
 type RecentMsg interface {
 	Push(msg msg.Msg)
+	Snapshot() []msg.Msg
 }
 
 type recentMsg struct {
@@ -17,6 +21,9 @@ type recentMsg struct {
 }
 
 func (a *recentMsg) Push(msg msg.Msg) {
+	if !acceptMethod.Contains(msg.Method()) {
+		return
+	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	a.queue.PushBack(msg)

@@ -6,6 +6,24 @@ import (
 	"github.com/spf13/viper"
 )
 
+const Version = "0.0.1"
+
+const (
+	DebugLevelNone   = 0
+	DebugLevelLow    = 1
+	DebugLevelMedium = 2
+	DebugLevelHigh   = 3
+)
+const (
+	metricsAdapterMsgRecv      = "adapter.msg.recv"
+	metricsAdapterMsgSend      = "adapter.msg.send"
+	metricsAdapterModelMsgSend = "adapter.model.send"
+)
+const (
+	DevicePropReport  = "device.prop.report"
+	DeviceEventReport = "device.event.report"
+)
+
 type AdapterClient interface {
 	Pid() string
 	ClientId() string

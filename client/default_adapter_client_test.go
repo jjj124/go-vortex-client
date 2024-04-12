@@ -4,13 +4,17 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"log"
+	"math/rand"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 	"testing"
 	"time"
 )
 
 func NewClientAndStart() AdapterClient {
-	var options = NewAdapterOptions("brfcmmayllmwdon9", "test", net.ParseIP("127.0.0.1"), 10011, "a5efaa0de7600f1fb009adca17782fd7537a17d26cbfd0ffb7bbedfcd1eca8b1", 3)
+	var options = NewAdapterOptions("brfcmmayllmwdon9", "test", net.ParseIP("127.0.0.1"), 10011, "a5efaa0de7600f1fb009adca17782fd7537a17d26cbfd0ffb7bbedfcd1eca8b1", 3, 1)
 	var client = NewDefaultAdapterClient(options)
 	var _, err = client.Start().BlockingGet()
 	if err != nil {
@@ -24,9 +28,14 @@ func TestStart(t *testing.T) {
 }
 
 func TestPropReport(t *testing.T) {
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGQUIT)
 	var adapter = NewClientAndStart()
-	var _, _ = adapter.DeviceOf("gw_01").WithCreateIfNotExist(false).Op().ReportProps().WithValue("voltage", 220).WithValue("current", 0.25).NeedReply().Execute().BlockingGet()
-	var _, _ = adapter.GwDeviceOf("gw_01").WithCreateIfNotExist(false).Op().ReportProps().WithValue("voltage", 220).WithValue("current", 0.25).NeedReply().Execute().BlockingGet()
+	ticker := time.NewTicker(time.Duration(5) * time.Second)
+	for range ticker.C {
+		var _, _ = adapter.DeviceOf("gw_01").WithCreateIfNotExist(true).Op().ReportProps().WithValue("voltage", rand.Float32()*20+200).WithValue("current", rand.Float32()).NeedReply().Execute().BlockingGet()
+	}
+	_ = <-c
 }
 func TestEventReport(t *testing.T) {
 	var adapter = NewClientAndStart()

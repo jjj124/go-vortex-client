@@ -13,6 +13,7 @@ type PropReportReply struct {
 type PropReportOperation interface {
 	NeedReply() PropReportOperation
 	WithValue(key string, val any) PropReportOperation
+	WithTs(ts int64) PropReportOperation
 	Execute() futures.Future[PropReportReply]
 }
 
@@ -21,14 +22,21 @@ type defaultPropReportOperation struct {
 	device    futures.Future[Device]
 	v         map[string]any
 	needReply bool
+	ts        int64
+}
+
+func (d *defaultPropReportOperation) WithTs(ts int64) PropReportOperation {
+	d.ts = ts
+	return d
 }
 
 func NewPropReportOperation(adapter AdapterClient, device futures.Future[Device]) PropReportOperation {
 	return &defaultPropReportOperation{
 		adapter,
 		device,
-		make(map[string]any, 0),
+		make(map[string]any),
 		false,
+		-1,
 	}
 }
 
@@ -50,7 +58,10 @@ func (d *defaultPropReportOperation) Execute() futures.Future[PropReportReply] {
 			ret.CompleteExceptionally(err)
 			return
 		}
-		var baseMsg = msg.NewBaseMsg().WithMethod("device.prop.report")
+		var baseMsg = msg.NewBaseMsg().WithMethod(DevicePropReport)
+		if d.ts > -1 {
+			baseMsg.WithTs(d.ts)
+		}
 		var payload = baseMsg.Payload()
 		maps.Copy(payload, d.v)
 		if d.needReply {

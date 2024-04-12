@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"github.com/dgraph-io/ristretto"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	futures "github.com/jjj124/go-future"
 	"github.com/jjj124/go-metrics"
@@ -19,7 +20,7 @@ type defaultAdapterClient struct {
 	adapterOptions      AdapterOptions
 	mqttClients         []mqtt.Client
 	receivedMsgHandlers []ReceivedMsgHandler
-	futures             *sync.Map
+	futures             *ristretto.Cache
 	adapterCache        AdapterCaches
 	component           DefaultAdapterComponent
 	vp                  *viper.Viper
@@ -62,7 +63,7 @@ func (d *defaultAdapterClient) Delivery(m *msg.DeliveryMsg) futures.Future[msg.R
 		mqttClient = d.mqttClients[index]
 	}
 	var ret = futures.NewFuture[msg.ReceivedMsg]()
-	d.futures.Store(mm.MsgId(), ret)
+	d.futures.Set(mm.MsgId(), ret, 1)
 	var bytes, err = mm.Marshal()
 	if err != nil {
 
@@ -71,8 +72,13 @@ func (d *defaultAdapterClient) Delivery(m *msg.DeliveryMsg) futures.Future[msg.R
 			var token = mqttClient.Publish("up/"+d.Pid(), 1, false, bytes)
 			if token.Wait() {
 				if token.Error() == nil {
-					log.Println("send --> ", mm.ToString())
-					metrics.GetOrRegisterCounter("adapter.msg.send", d.component.MetricsRegistry()).Inc(1)
+					if d.Options().DebugLevel() > DebugLevelNone {
+						log.Println("send --> ", mm.ToString())
+					}
+					metrics.GetOrRegisterCounter(metricsAdapterMsgSend, d.Components().MetricsRegistry()).Inc(1)
+					if m.Method() == DevicePropReport || m.Method() == DeviceEventReport {
+						metrics.GetOrRegisterCounter(metricsAdapterModelMsgSend, d.Components().MetricsRegistry()).Inc(1)
+					}
 					d.component.RecentSendMsg().Push(m)
 				}
 			} else {
@@ -165,14 +171,24 @@ func (d *defaultAdapterClient) Options() AdapterOptions {
 }
 func NewDefaultAdapterClient(adapterOptions AdapterOptions) AdapterClient {
 
-	var receivedMsgHandlers = make([]ReceivedMsgHandler, 2)
+	var receivedMsgHandlers = make([]ReceivedMsgHandler, 4)
 	receivedMsgHandlers[0] = NewServiceInvokeMsgHandler()
 	receivedMsgHandlers[1] = NewAskDeviceConnectStateHandler()
+	receivedMsgHandlers[2] = NewDescribeSelfHandler()
+	receivedMsgHandlers[3] = NewAskRecentMsgHandler()
 
+	futuresCache, err := ristretto.NewCache(&ristretto.Config{
+		NumCounters: 102400,
+		MaxCost:     102400,
+		BufferItems: 64,
+	})
+	if err != nil {
+		panic(err)
+	}
 	var ret = &defaultAdapterClient{adapterOptions: adapterOptions,
 		mqttClients:         make([]mqtt.Client, adapterOptions.ConnectNum()),
 		receivedMsgHandlers: receivedMsgHandlers,
-		futures:             &sync.Map{},
+		futures:             futuresCache,
 		adapterCache:        NewCaches(),
 		component:           NewAdapterComponent(),
 		vp:                  viper.New(),
@@ -186,16 +202,19 @@ func newMsgHandler(d *defaultAdapterClient) mqtt.MessageHandler {
 		if err != nil {
 
 		} else {
-			log.Println("recv <-- ", receivedMsg.ToString())
+			if d.Options().DebugLevel() > DebugLevelNone {
+				log.Println("recv <-- ", receivedMsg.ToString())
+			}
 			go func() {
 				for _, handler := range d.receivedMsgHandlers {
 					handler(receivedMsg, d)
 				}
 			}()
-			metrics.GetOrRegisterCounter("adapter.msg.recv", d.component.MetricsRegistry()).Inc(1)
+			metrics.GetOrRegisterCounter(metricsAdapterMsgRecv, d.Components().MetricsRegistry()).Inc(1)
 			d.component.RecentReceivedMsg().Push(receivedMsg)
-			var f, b = d.futures.LoadAndDelete(receivedMsg.MsgId())
+			var f, b = d.futures.Get(receivedMsg.MsgId())
 			if b {
+				d.futures.Del(receivedMsg.MsgId())
 				var v, suc = f.(futures.Future[msg.ReceivedMsg])
 				if suc {
 					var err = receivedMsg.Error()
