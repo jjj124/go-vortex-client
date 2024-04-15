@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/jjj124/go-vortex-client/msg"
+	"runtime"
 )
 
 func NewDescribeSelfHandler() ReceivedMsgHandler {
@@ -18,7 +19,7 @@ func NewDescribeSelfHandler() ReceivedMsgHandler {
 func handleDescribeSelf(msg *msg.ReceivedMsg, client AdapterClient) {
 	var payload = make(map[string]any)
 	var sdk = make(map[string]any)
-	sdk["lang"] = "golang"
+	sdk["lang"] = "Golang"
 	sdk["version"] = Version
 	payload["sdk"] = sdk
 
@@ -29,7 +30,13 @@ func handleDescribeSelf(msg *msg.ReceivedMsg, client AdapterClient) {
 	options["pid"] = client.Options().Pid()
 	options["connection_num"] = client.Options().ConnectNum()
 	options["debug_level"] = client.Options().DebugLevel()
+	options["client_id"] = client.Options().ClientId()
 	payload["options"] = options
+
+	var system = make(map[string]any)
+	system["os"] = runtime.GOOS
+	system["arch"] = runtime.GOARCH
+	payload["system"] = system
 
 	var reply = msg.NewReply(payload)
 	client.Delivery(reply)
